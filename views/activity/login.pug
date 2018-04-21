@@ -1,0 +1,13 @@
+extends ../layout.pug
+
+block content
+  div.container
+    div.error_div
+      if errors
+        each error, i in errors
+          p #{error.msg}
+
+    form(action='login', method='post')
+      input(name='email', type='text', placeholder='Email', required='true')
+      input(name='password', type='password', placeholder='Password', required='true')
+      button(type='submit') Sign in

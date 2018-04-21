@@ -1,0 +1,8 @@
+extends ../layout.pug
+
+block content
+  div.pull_left.col-sm-3
+    include ../gutter.pug
+
+  div.container.col-sm-6
+    p Hello #{user.name} today is #{date}
