@@ -12,15 +12,15 @@ block content
 
     p Name: #{user.name}
 
-    form(action='/user/update/' + user.id, method='put')
+    form(action='/user/update/' + user.id, method='post')
       p
-      input(name='email', type='text', placeholder='Email', required='true', value= user.email)
+      input(name='email', type='text', placeholder='Email', value= user.email)
       p
       label(for='role') Role
       select#role(name='role')
         each role, i in roles
           option(value= role selected= role == user.role) #{role}
       p
-      input(name='password', type='password', placeholder='Password', required='true')
+      input(name='password', type='password', placeholder='Password')
       p
       button.btn.btn-primary(type='submit') Update User

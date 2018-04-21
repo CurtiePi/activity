@@ -50,14 +50,25 @@ userRouter.route('/create')
 userRouter.route('/userlist')
 .get(function(req, res, next) {
   console.log('Getting the list of users');
+
+  var isAdmin = false;
+  Users.isAdminRole(req.session.userId, function(err, result) {
+    if (err) {
+      var err = new Error('Problem getting user list');
+      err.status = 401;
+      return next(err);
+    }
+
+    isAdmin = result;
+  });
+
   Users.listUsers(function (err, users){
     if (err || !users) {
         var err = new Error('Problem getting user list');
         err.status = 401;
         return next(err);
       } else {
-
-        return res.render('user/userlist', { users: users });
+        return res.render('user/userlist', { users: users, isAdmin: isAdmin });
       }
   });
 });
@@ -87,15 +98,31 @@ userRouter.route('/update/:id')
 
        return res.render('user/update', {title: 'Update user ' + user.name, user: user, roles: roles });
   });
-}).put(function(req, res, next) {
+}).post(function(req, res, next) {
   console.log('Updating user information');
   Users.findById(req.params.id)
        .exec(req.body, function (err, user) {
        if (err) throw err;
 
-       console.log('User found!');
+         console.log('User found!');
+         if (user.role != req.body.role) {
+           user.role = req.body.role;
+         }
 
-       return res.redirect('/user/userlist');
+         if (user.email != req.body.email) {
+           user.email = req.body.email;
+         }
+
+         if(req.body.password) {
+           user.password = req.body.password;
+         }
+
+         user.save(function (err, user) {
+            if (err) throw err;
+            console.log('User updated and saved');
+
+            return res.redirect('/user/userlist');
+        });
   });
 });
 

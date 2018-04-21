@@ -22,24 +22,7 @@ var UserSchema = new Schema({
     required: true,
   }
 });
-/*
-UserSchema.statics.listUsers = function(User) {
-  return function (req, res) {
-    console.log('Finding users');
-    User.find({}, function(error, users) {
-     if (error) {
-       var error = new Error('Problem getting users');
-       err.status = 401;
-       next(err);
-     }
 
-     console.log('No error, rendering page');
-
-     res.render('users/listusers', {users : users});
-    });
-  }
-};
-*/
 UserSchema.statics.listUsers = function(callback) {
   console.log('Finding users');
   User.find({}).
@@ -66,36 +49,46 @@ UserSchema.statics.authenticate = function (email, password, callback) {
         if (result === true) {
           return callback(null, user);
         } else {
-          return callback();
+          var err = {msg: 'Password is incorrect for the email address.'};
+          return callback(err, null);
         }
       });
+    });
+};
+
+UserSchema.statics.isAdminRole = function (userId, callback) {
+  User.findOne({_id: userId})
+    .exec(function (err, user) {
+      if (err) {
+        return callback(err, false);
+      }
+
+      if(!user) {
+        return callback(null, false);
+      } else {
+        var result = user.role == 'ADMIN';
+        return callback(null, result);
+      }
     });
 };
 
 UserSchema.pre('save', function (next) {
   var user = this;
   console.log('Presave the user to hash the password');
-  bcrypt.hash(user.password, 10, function (err, hash) {
-    if (err) {
-      return next(err);
-    }
 
-    user.password = hash;
+  if(user.isModified('password')) {
+    bcrypt.hash(user.password, 10, function (err, hash) {
+      if (err) {
+        return next(err);
+      }
+
+      user.password = hash;
+      next();
+    })
+  } else {
     next();
-  })
-});
-
-/*
-console.log('Presave the user to hash the password');
-bcrypt.hash(user.password, 10, function (err, hash) {
-  if (err) {
-    return next(err);
   }
-
-  user.password = hash;
-  next();
-})
-*/
+});
 
 var User = mongoose.model('User', UserSchema);
 module.exports = User;

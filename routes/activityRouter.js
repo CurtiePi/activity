@@ -43,33 +43,33 @@ activityRouter.route('/login')
                      role: 'ADMIN',
                      email: 'myemail@somwhere.com'
                     };
+
+    var date = new Date();
+    res.render('activity/dashboard', {user: user, date: date.toString()});
   } else {
-    console.log('Perform validation');
+    Users.authenticate(req.body.email, req.body.password, function(error, user){
+      if (error) {
+        var errors = [error];
+        return res.render('activity/login', {errors: errors});
+      }
 
-    req.app.locals.isLoggedIn = true;
-    req.session.userId = 2938;
-    var user = {id: 2938,
-                     name: 'Fredrick Hampton',
-                     role: 'ADMIN',
-                     email: 'myemail@somwhere.com'
-                    };
+      req.app.locals.isLoggedIn = true;
+      req.session.userId = user.id;
+
+      var date = new Date();
+      return res.render('activity/dashboard', {user: user, date: date.toString()});
+
+    });
   }
-
-  var date = new Date();
-  res.render('activity/dashboard', {user: user, date: date.toString()});
 });
 
 activityRouter.route('/dashboard')
 .get(mw.protect, function (req, res, next) {
-
-    var user = {id: 2938,
-                     name: 'Fredrick Hampton',
-                     role: 'ADMIN',
-                     email: 'myemail@somwhere.com'
-                    };
-
-    var date = new Date();
-    res.render('activity/dashboard', {user: user, date: date.toString()});
+    Users.findOne({_id: req.session.userId})
+      .exec(req.body, function (err, user) {
+        var date = new Date();
+        res.render('activity/dashboard', {user: user, date: date.toString()});
+      });
 });
 
 activityRouter.route('/logout')
