@@ -71,7 +71,7 @@ userRouter.route('/profile/:id')
 
        console.log('User found!');
 
-       return res.render('user/profile', {title: 'Profile for ' + user.name, user: user });
+       return res.render('user/profile', {title: 'Profile for ' + user.name, user: user, isDelete: false });
   });
 });
 
@@ -94,6 +94,31 @@ userRouter.route('/update/:id')
        if (err) throw err;
 
        console.log('User found!');
+
+       return res.redirect('/user/userlist');
+  });
+});
+
+userRouter.route('/delete/:id')
+.get(function(req, res, next) {
+  console.log('Getting user profile to confirm delete');
+  Users.findById(req.params.id)
+       .exec(req.body, function (err, user) {
+       if (err) throw err;
+
+       console.log('User found!');
+       var roles = Role.getRoles();
+
+       return res.render('user/profile', {title: 'Delete user ' + user.name, user: user, isDelete : true });
+  });
+})
+.post(function(req, res, next) {
+  console.log('Removing  user information');
+  Users.findByIdAndRemove(req.params.id)
+       .exec(req.body, function (err, user) {
+       if (err) throw err;
+
+       console.log('User Removed!');
 
        return res.redirect('/user/userlist');
   });

@@ -20,6 +20,8 @@ block content
             a(href='#' + user.id) #{user.role}
           td
             a(href='/user/update/' + user.id) Edit
+          td
+            a(href='/user/delete/' + user.id) Remove
 
     p
      a.btn.btn-primary(href='/user/create') Add New User

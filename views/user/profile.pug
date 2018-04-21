@@ -15,4 +15,9 @@ block content
     p Role: #{user.role}
 
     p
-    a.btn.btn-primary(href='/user/update/' + user.id) Edit
+    if isDelete
+      form(action='/user/delete/' + user.id, method='post')
+        input(type= 'hidden', name= 'id', value= user.id)
+        button.btn.btn-primary(type='submit') Delete User
+    else
+      a.btn.btn-primary(href='/user/update/' + user.id) Edit

@@ -2,6 +2,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var dateFormat = require('dateformat');
+var mw = require('../lib/middlewares');
 
 var Users = require('../models/user');
 
@@ -19,7 +20,7 @@ activityRouter.route('/')
 .get(function(req, res, next) {
    console.log('Homepage');
 
-   res.render('activity/index');
+   res.redirect('/dashboard');
    //res.send('INDEX is where we should be');
 });
 
@@ -56,6 +57,19 @@ activityRouter.route('/login')
 
   var date = new Date();
   res.render('activity/dashboard', {user: user, date: date.toString()});
+});
+
+activityRouter.route('/dashboard')
+.get(mw.protect, function (req, res, next) {
+
+    var user = {id: 2938,
+                     name: 'Fredrick Hampton',
+                     role: 'ADMIN',
+                     email: 'myemail@somwhere.com'
+                    };
+
+    var date = new Date();
+    res.render('activity/dashboard', {user: user, date: date.toString()});
 });
 
 activityRouter.route('/logout')
