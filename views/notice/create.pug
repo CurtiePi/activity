@@ -1,0 +1,43 @@
+extends ../layout.pug
+
+block content
+  div.pull_left.col-sm-2
+    include ../gutter.pug
+
+  div.container.col-md-10
+    .row
+      include includes/noticeTypeSelector.pug
+      button.btn#myBtn(type="button", onclick='create_preview()') Click Me
+      div.modal#myModal
+        div.modal-content
+          span.close(onclick='close_modal()') &times;
+           
+    .row
+      div.panel.addnew.col-md-10
+        form(name='noticeForm')
+          .row
+            .col-md-6
+              label(for='effective_date') Start Date:
+              if notice
+                input.input-sm(type='text', placeholder='week starting' name='effective_date', id='datepicker_effective')
+              else
+                input.inpyt-sm(type='text', placeholder='week starting', name='effective_date', id='datepicker_effective')
+            div.col-md-2(id='staff')
+              include includes/staffdropdown.pug
+          .row
+            div.col-md-10(id='form_body')
+              include includes/weeklyENForm.pug
+
+
+  div.hidden(id='HOL')
+    include includes/holidayForm.pug
+  div.hidden(id='WZH')
+    include includes/weeklyZHForm.pug
+  div.hidden(id='WEN')
+
+  if notice
+    script.
+       var effective_datePicker = new Pikaday({ field: document.getElementById('datepicker_effective'), defaultDate: new Date('#{notice.effective_date}'), setDefaultDate: true });
+  else
+    script.
+       var effective_datePicker = new Pikaday({ field: document.getElementById('datepicker_effective'), defaultDate: new Date(), setDefaultDate: true });

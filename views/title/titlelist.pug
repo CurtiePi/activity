@@ -1,0 +1,39 @@
+extends ../layout.pug
+
+block content
+  div.pull_left.col-sm-2
+    include ../gutter.pug
+
+  div.container.col-sm-7
+    h1
+      a(href='#') Activity  Titles
+    if message
+      p= message
+    div.row
+
+      div.col-sm-6
+        h4 English
+        ul
+          each title in english
+            li #{title}
+
+      div.col-sm-6
+        h4 Chinese
+        ul
+          each title in chinese
+            li #{title}
+
+
+    div.col-sm-12
+      form(action='/title/create', method='post')
+        input(name='title', type='text', placeholder='Activity Title')
+        label.radio-inline
+          input(name='title_lang', type='radio', value='ZH' checked='')
+          | Chinese
+        label.radio-inline
+          input(name='title_lang', type='radio', value='EN' checked='')
+          | English
+        p
+          button.btn.btn-primary(type='submit') Add new title
+
+

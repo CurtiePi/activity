@@ -35,6 +35,13 @@ UserSchema.statics.listUsers = function(callback) {
   });
 };
 
+UserSchema.statics.listStaff = function() {
+  console.log('Finding staff');
+  var query = User.find({role: { $in: ['ADMIN', 'STAFF'] } });
+
+  return query.exec();
+};
+
 UserSchema.statics.authenticate = function (email, password, callback) {
   User.findOne({email: email })
     .exec(function (err, user) {

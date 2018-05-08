@@ -1,0 +1,16 @@
+if notice
+  each activiy in notice.activities
+    script.
+//      load_activities("#{notice.id}-#{activity.id}","#{activity.title}","#{activity.content}", true);
+
+.form-group
+  label(for='role') Activity Label 
+  select#role(name='activity_title')
+    each activity_title, i in en_titles 
+      option(value= activity_title) #{activity_title}
+.form-group
+  label(for='content') Content:
+  textarea#content.form-control(row=2, cols=80, placeholder='content' name='content')
+
+.form-group
+  button.btn.btn-primary(type="button", onclick='insert_activity();') Add Activity

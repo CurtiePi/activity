@@ -1,0 +1,11 @@
+
+if notice
+  script.
+    load_message("#{notice.id}","#{notice.message_open}","#{notice.message_close}", true);
+
+.form-group
+  label(for='message_open') English Message Content:
+  textarea#message_open.form-control(rows=5, cols=180, placeholder='opening message' name='message_open')
+.form-group
+  label(for='message_close') Closing Message Content:
+  textarea#message_close.form-control(rows=5, cols=180, placeholder='closing message' name='message_close')

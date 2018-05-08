@@ -1,8 +1,65 @@
+var noticeBin = {};
 
+function notice_type_update(element) {
 
-function delete_project(projectid, projectname){
-    if (confirm('Are you sure you want to delete ' + projectname + '?')){
-        var href = "/projects/" + projectid;
+  console.log('Yeah this is happening!');
+
+  // Get current notice type
+  var currType = document.getElementById('current_type').value;
+  store_notice(currType, element.value);
+  remove_activity_instance();
+  switch_node_by_type(currType, element.value);
+
+  if (noticeBin[element.value]) {
+    notice_populate_form(noticeBin[element.value]);
+    delete noticeBin[element.value];
+  } else {
+    effective_datePicker.setDate(new Date(), false);
+  }
+  document.getElementById('current_type').value = element.value;
+}
+
+function store_notice(oldType, newType) {
+  if (oldType != newType && !noticeBin[oldType]) {
+    // create a notice object
+    noticeBin[oldType] = get_notice_object();  
+  } 
+}
+
+function remove_activity_instances() {
+  delete acitivityIns;
+}
+
+function switch_node_by_type(oldType, newType) {
+  // Items in bullpen are activated, activated items are benched.
+  var active = document.getElementById('form_body');
+  var bench = document.getElementById(oldType);
+  var bullpen = document.getElementById(newType);
+    
+  while(active.firstChild){
+    bench.appendChild(active.firstChild);
+  }
+  while(bullpen.firstChild) {
+    active.appendChild(bullpen.firstChild);
+  }
+}
+
+function clear_form_fields() {
+    var noticeForm = document.noticeForm;
+    
+    // Clear shared fields on the notice Form.
+    if (noticeForm.message_open && noticeForm.message_close) {
+      noticeForm.message_open.value = '';
+      noticeForm.message_close.value = '';
+    } else if (noticeForm.message_en && noticeForm.message_zh) {
+      noticeForm.message_en.value = '';
+      noticeForm.message_zh.value = '';
+    } 
+}
+
+function delete_notice(noticeid){
+    if (confirm('Are you sure you want to delete this notice?')){
+        var href = "/notice/" + noticeid;
 
         makeAjaxRequest(href, 'DELETE');
 
@@ -12,47 +69,56 @@ function delete_project(projectid, projectname){
 }
 
 
-function insert_contact() {
-    var name = document.projectForm.name.value;
-    var email = document.projectForm.email.value;
-    var phone = document.projectForm.phone.value;
-    var skype = document.projectForm.skype.value;
-    var wechat = document.projectForm.wechat.value;
-    var isRecipient = document.projectForm.is_update_recipient.value;
-    var um = document.projectForm.update_method;
-    var updateMethod = um.options[um.selectedIndex].value;
+function insert_activity() {
+    var content = document.noticeForm.content.value;
+    var at = document.noticeForm.activity_title;
+    var activityTitle = at.options[at.selectedIndex].value;
 
-    if (typeof contacts === 'undefined') {
-        contacts = new Contacts();
+    if (typeof activityIns === 'undefined') {
+        activityIns = new Activity();
     }
 
-    var identifier = contacts.addContact(name, email, phone, skype, wechat, isRecipient, updateMethod);
+    var identifier = activityIns.addActivity(activityTitle, content);
 
-    build_contact_card(name, email, phone, skype, wechat, isRecipient, updateMethod, identifier);
+    build_activity_card(activityTitle, content, identifier);
 
-    document.projectForm.name.value = "";
-    document.projectForm.email.value = "";
-    document.projectForm.phone.value = "";
-    document.projectForm.skype.value = "";
-    document.projectForm.wechat.value = "";
-    document.projectForm.is_update_recipient = false;
-    document.projectForm.update_method.selectedIndex = 0; 
+    document.noticeForm.content.value = "";
+    document.noticeForm.activity_title.selectedIndex = 0; 
 }
 
 //This is for loading an already existing project's contacts
-function load_contact(contactId, name, email, phone, skype, wechat, is_update_recipient, update_method, isEditable=false) {
-    if (typeof contacts === 'undefined') {
-        contacts = new Contacts();
+function load_activity(activityId, activityTitle, content, isEditable=false) {
+    if (typeof activityIns  === 'undefined') {
+        activityIns = new Activity();
     }
-    var identifier = contacts.addContact(name, email, phone, skype, wechat, is_update_recipient, update_method, contactId);
+    var identifier = activityIns.addActivity(activityTitle, content, activityId);
 
     // If loading a predefined contact, use the id as the identifier
-    build_contact_card(name, email, phone, skype, wechat, is_update_recipient, update_method, contactId, isEditable);
+    build_activity_card(activityTitle, content, activityId, isEditable);
 }
 
-function remove_contact(event) {
+function load_activities_from_notice_bin(activities) {
+    for (var identifier in activities) {
+      var activity = activities[identifier]; 
+      var content = activity.content;
+      var activityTitle = activity.title;
+
+      if (typeof activityIns === 'undefined') {
+        //activityIns = new Activity();
+        activityIns = activities;
+      }
+
+      //var identifier = activityIns.addActivity(activityTitle, content, identifier);
+
+    }
+    //build_activity_card(activityTitle, content, identifier);
+
+
+}
+
+function remove_activity(event) {
     var identifier = event.target.parentElement.id;
-    contacts.removeContact(identifier);
+    activityIns.removeActivity(identifier);
     remove_card(identifier);
 }
 
@@ -61,7 +127,7 @@ function remove_card(identifier) {
      targetElement.parentNode.removeChild(targetElement);
 }
 
-function build_contact_card(name, email, phone, skype, wechat, is_update_recipient, update_method, identifier, isEditable) {
+function build_activity_card(activityTitle, content, identifier, isEditable) {
      // Create the basic elements
      var cardDiv = document.createElement("div");
      cardDiv.setAttribute("class", "card panel");
@@ -71,338 +137,174 @@ function build_contact_card(name, email, phone, skype, wechat, is_update_recipie
      var boldTag = document.createElement("b");
      var headerElement = document.createElement("h4");
      var deleteButton = document.createElement ("button");
-     deleteButton.onclick = remove_contact;
+     deleteButton.onclick = remove_activity;
 
-     var skypeText = document.createElement("p");
-     skypeText.appendChild(document.createTextNode("Skype: " + skype));
-     var wechatText = document.createElement("p");
-     wechatText.appendChild(document.createTextNode("Wechat: " + wechat));
-     var phoneText = document.createElement("p");
-     phoneText.appendChild(document.createTextNode("Phone: " + phone));
-     var emailText = document.createElement("p");
-     emailText.appendChild(document.createTextNode("Email: " + email));
-     boldTag.appendChild(document.createTextNode(name));
+     var contentText = document.createElement("p");
+     contentText.appendChild(document.createTextNode(content));
+     boldTag.appendChild(document.createTextNode(activityTitle));
 
      containerDiv.appendChild(boldTag);
-     containerDiv.appendChild(emailText);
-     containerDiv.appendChild(phoneText);
-     containerDiv.appendChild(skypeText);
-     containerDiv.appendChild(wechatText);
-
-     if(is_update_recipient) {
-         var recipient = "Receives updates by " + update_method;
-         var boldTagTwo = document.createElement("b");
-         boldTagTwo.appendChild(document.createTextNode(recipient));
-         containerDiv.appendChild(boldTagTwo);
-     }
+     containerDiv.appendChild(contentText);
 
      cardDiv.appendChild(containerDiv);
+     cardDiv.appendChild(deleteButton);
 
      if (isEditable) {
-         cardDiv.appendChild(deleteButton);
          var ids = identifier.split("-");
-         var link = "/projects/" + ids[0] + "/contacts/" + ids[1] + "/edit";
+         var link = "/notice/" + ids[0] + "/activity/" + ids[1] + "/edit";
          var linkElement = document.createElement("a");
          linkElement.appendChild(document.createTextNode("Edit"));
          linkElement.setAttribute("href", link);
          cardDiv.appendChild(linkElement);
      }
 
-     document.getElementById('contactCards').appendChild(cardDiv);
+     document.getElementById('activity_cards').appendChild(cardDiv);
 }
 
-function Contacts() {
+function Activity() {
 }
 
-Contacts.prototype.addContact = function(name, email, phone, skype, wechat, isUpdateRecipient, updateMethod, identifier=false) {
-    var data = {'name': name,
-                'email': email,
-                'phone': phone,
-                'skype': skype,
-                'wechat': wechat,
-                'is_update_recipient': isUpdateRecipient,
-                'update_method': updateMethod
+Activity.prototype.addActivity = function(activityTitle, content, identifier=false) {
+    var data = {'title': activityTitle,
+                'content': content,
                 };
 
     if (!identifier) {
-        var id = name.replace(/ /g,'') + "_" + Date.now();
+        var id = activityTitle.replace(/ /g,'') + "_" + Date.now();
     } else {
         var id = identifier;
     }
     this[id] = data;
 
-    return identifier;
-};
-
-Contacts.prototype.removeContact = function(identifier) {
-    delete this[identifier];
-};
-
-Contacts.prototype.getContacts = function() {
-    var information = this;
-    return Object.keys(information).map(function(key){return information[key]});
-};
-
-function insert_deliverable() {
-    var asset = document.projectForm.asset.value;
-    var start_date = document.projectForm.start_date.value;
-    var due_date = document.projectForm.due_date.value;
-    var formattedStartDate = formatDateToISO(start_date);
-    var formattedDueDate = formatDateToISO(due_date);
-    var past_due = document.projectForm.past_due.checked;
-    var is_delivered = document.projectForm.is_delivered.checked;
-
-    if (typeof deliverables === 'undefined') {
-        deliverables = new Deliverables();
-    }
-
-    var identifier = deliverables.addDeliverable(asset, formattedStartDate, formattedDueDate, past_due, is_delivered);
-    build_deliverable_card(asset, start_date, due_date, past_due, is_delivered, identifier);
-
-    document.projectForm.asset.value = "";
-    document.projectForm.start_date.value = "";
-    document.projectForm.due_date.value = "";
-    document.projectForm.past_due.checked = false;
-    document.projectForm.is_delivered.checked = false;
-}
-
-//This is for loading an already existing project's deliverables
-function load_deliverable(deliverableId, asset, start_date, due_date, past_due, is_delivered, isEditable=false) {
-    if (typeof deliverables === 'undefined') {
-        deliverables = new Deliverables();
-    }
-
-    var cardStartDate = formatDateToString(start_date);
-    var cardDueDate = formatDateToString(due_date);
-
-    var identifier = deliverables.addDeliverable(asset, start_date, due_date, past_due, is_delivered, deliverableId);
-
-    // If loading a predefined deliverable, use the id as the identifier
-    build_deliverable_card(asset, cardStartDate, cardDueDate, past_due, is_delivered, deliverableId, isEditable);
-
-}
-
-function update_deliverable(identifiers) {
-    //create the data object
-    var deliverableData = {
-        "asset": document.deliverableEditForm.asset.value,
-        "start_date": formatDateToISO(document.deliverableEditForm.start_date.value),
-        "due_date": formatDateToISO(document.deliverableEditForm.due_date.value),
-        "past_due": document.deliverableEditForm.past_due.checked,
-        "is_delivered": document.deliverableEditForm.is_delivered.checked};
-
-    var ids = identifiers.split("-");
-    var href = "/projects/" + ids[0] + "/deliverables/" + ids[1];
-
-    makeAjaxRequest(href, 'PUT',  deliverableData);
-}
-
-function update_contact(identifiers) {
-    //create the data object
-        
-    var um =  document.contactEditForm.update_method;
-    updateMethod = um.options[um.selectedIndex].value;
-
-    var contactData = {
-        "name": document.contactEditForm.name.value,
-        "email": document.contactEditForm.email.value,
-        "phone": document.contactEditForm.phone.value,
-        "skype": document.contactEditForm.skype.value,
-        "wechat": document.contactEditForm.wechat.value,
-        "is_update_recipient": document.contactEditForm.is_update_recipient.checked,
-        "update_method": updateMethod
-    };
-
-    var ids = identifiers.split("-");
-    var href = "/projects/" + ids[0] + "/contacts/" + ids[1];
-
-    makeAjaxRequest(href, 'PUT',  contactData);
-}
-
-function remove_deliverable(event) {
-    var identifier = event.target.parentElement.id;
-    deliverables.removeDeliverable(identifier);
-    remove_card(identifier);
-}
-
-function build_deliverable_card(asset, start_date, due_date, past_due, is_delivered, identifier, isEditable) {
-     // Create the basic elements
-     var cardDiv = document.createElement("div");
-     
-     var clz =  "card panel";
-     if (past_due) {
-         clz += " past";
-     }
-     if (is_delivered) {
-         clz += " delivered";
-     }
-     cardDiv.setAttribute("class",clz);
-     
-     cardDiv.setAttribute("id", identifier);
-     var containerDiv = document.createElement("div");
-     containerDiv.setAttribute("class", "container");
-     var boldTag = document.createElement("b");
-     var statusBoldTag = document.createElement("b");
-     var headerElement = document.createElement("h4");
-     var deleteButton = document.createElement ("button");
-     deleteButton.onclick = remove_deliverable;
-
-     var startDateText = document.createElement("p");
-     startDateText.setAttribute("class", "startDate");
-     startDateText.appendChild(document.createTextNode("Start Date: " + start_date));
-     var dueDateText = document.createElement("p");
-     dueDateText.appendChild(document.createTextNode("Due Date: " + due_date));
-     dueDateText.setAttribute("class", "dueDate");
-     var statusText = document.createElement("p");
-     var status = "Status: ";
-     if (past_due) {
-         status += "Past Due ";
-         
-     }
-
-     if (is_delivered) {
-         status += "Delivered";
-     }
-
-     statusBoldTag.appendChild(document.createTextNode(status));
-     statusText.appendChild(statusBoldTag);
-     boldTag.appendChild(document.createTextNode(asset));
-
-     containerDiv.appendChild(boldTag);
-     containerDiv.appendChild(startDateText);
-     containerDiv.appendChild(dueDateText);
-     if (past_due || is_delivered) {
-         containerDiv.appendChild(statusText);
-     }
-     
-     cardDiv.appendChild(containerDiv);
-     if (document.projectForm && !is_delivered) {
-         cardDiv.appendChild(deleteButton);
-     }
-     if (isEditable && !is_delivered) {
-         var ids = identifier.split("-");
-         var link = "/projects/" + ids[0] + "/deliverables/" + ids[1] + "/edit";
-         var linkElement = document.createElement("a");
-         linkElement.appendChild(document.createTextNode("Edit"));
-         linkElement.setAttribute("href", link);
-         cardDiv.appendChild(linkElement);
-     }
-
-     document.getElementById('deliverableCards').appendChild(cardDiv);
-}
-
-function Deliverables() {
-}
-
-Deliverables.prototype.addDeliverable = function(asset, start_date, due_date, past_due, is_delivered, identifier=false) {
-    var data = {'asset': asset,
-                'start_date': start_date,
-                'due_date': due_date,
-                'past_due': past_due,
-                'is_delivered': is_delivered
-                };
-
-    if (!identifier) {
-        var id = "deliverable_" + Date.now();
-    } else {
-        var id = identifier;
-    }
-    this[id] = data;
     return id;
 };
 
-Deliverables.prototype.removeDeliverable = function(identifier) {
+Activity.prototype.removeActivity = function(identifier) {
     delete this[identifier];
 };
 
-Deliverables.prototype.getDeliverables = function() {
+Activity.prototype.getActivity = function() {
     var information = this;
     return Object.keys(information).map(function(key){return information[key]});
 };
 
-function add_project() {
-    var href = "/projects/create";
-    var project = build_project_object();
+function update_activity(identifiers) {
+    //create the data object
+        
+    var at =  document.activityEditForm.activity_title;
+    activityTitle = at.options[um.selectedIndex].value;
 
-    if(project) {
+    var activityData = {
+        "title": activityTitle,
+        "content": document.activityEditForm.content.value
+    };
+
+    var ids = identifiers.split("-");
+    var href = "/notice/" + ids[0] + "/activity/" + ids[1];
+
+    makeAjaxRequest(href, 'PUT',  activityData);
+}
+
+function save_notice() {
+    var href = "/notice/create";
+    var notice = build_notice_JSON();
+
+    if(notice) {
         // Post data to server.
-        makeAjaxRequest(href, 'POST',  project);
+        makeAjaxRequest(href, 'POST',  notice);
     }
 }
 
-function update_project(projectId) {
-    var href = "/projects/" + projectId;
-    var project = build_project_object();
+function update_notice(noticeId) {
+    var href = "/notice/" + noticeId;
+    var notice = build_notice_JSON();
 
-    if(project) {
+    if(notice) {
         // Post data to server.
-        makeAjaxRequest(href, 'PUT',  project);
+        makeAjaxRequest(href, 'PUT',  notice);
     }
 }
 
-function build_project_object() {
-    // Build the project data object to post to server
-    var project = {};
-    var projectForm = document.projectForm;
+function get_notice_object() {
+  var retval =  build_notice_object(false);
+  remove_activity_instance();
+  return retval;
+}
+
+function get_notice_JSON() {
+  var retval = JSON.parse(JSON.stringify(build_notice_object(true)));
+  remove_activity_instance();
+  return retval;
+}
+
+function build_notice_object(forOutput = false) {
+    // Build the notice data object to post to server
+    var notice = {};
+    var noticeForm = document.noticeForm;
     
-    // Retreive general project data from project Form.
-    project.title = projectForm.title.value;
-
-    if (typeof project.title === 'undefined' || project.title === '') {
-        //throw an error as there must be a title
-        document.getElementById('error_msg').innerHTML = "You must have a title.";
-        document.getElementById('error_div').style.display = "inline";
-        return false;
+    // Retreive general notice  data from notice Form.
+    if (noticeForm.message_open && noticeForm.message_close) {
+      notice.message_open = noticeForm.message_open.value;
+      notice.message_close = noticeForm.message_close.value;
+    } else if (noticeForm.message_en && noticeForm.message_zh) {
+      notice.message_en = noticeForm.message_en.value;
+      notice.message_zh = noticeForm.message_zh.value;
     }
 
-    project.description = projectForm.description.value;
-    project.kickoff_date = formatDateToISO(projectForm.kickoff_date.value);
-    project.is_on_hold = document.projectForm.is_on_hold.checked;
-    project.is_archived = document.projectForm.is_archived.checked;
+    var selIdx = noticeForm.teacher.selectedIndex;
+    notice.teacher_name = noticeForm.teacher[selIdx].value;
 
-    project.huboard_link = projectForm.huboard_link.value;
-    project.ghrepo = projectForm.ghrepo.value;
-    project.rdbiz_link = projectForm.rdbiz_link.value;
-    project.slackchannel = projectForm.slackchannel.value;
-    project.send_updates = projectForm.send_updates.checked;
-    if(project.send_updates) {
-        var selIdx = projectForm.send_update_time.selectedIndex;
-        project.send_update_time = parseInt(projectForm.send_update_time[selIdx].value);
-        project.send_update_day = convertCheckboxesToInteger(projectForm.send_update_day);     
+    notice.effective_date = formatDateToISO(noticeForm.effective_date.value);
+
+
+    // Retrieve activties from object.
+    if (typeof activityIns !== 'undefined') {
+        var activities = activityIns.getActivity();
+        
+        if(activities.length > 0) {
+            notice.activities = (forOutput) ? activityIns.getActivity() : activityIns;
+        }
+    } else if(forOutput) {
+      notice.activities = [];
+    }
+
+    return notice;
+}
+
+function notice_populate_form(notice) {
+    // Build the notice data object to post to server
+    var noticeForm = document.noticeForm;
+    
+    // Retreive general notice  data from notice Form.
+    if (notice.message_open && notice.message_close) {
+      noticeForm.message_open.value = notice.message_open;
+      noticeForm.message_close.value = notice.message_close;
+    } else if (notice.message_en && notice.message_zh) {
+      noticeForm.message_en.value = notice.message_en;
+      noticeForm.message_zh.value = notice.message_zh;
+    } 
+
+    var elem = noticeForm.teacher
+    for (var i = 0; i < elem.options.length; i++) {
+      if (elem.options[i] == notice.teacher_name) {
+        elem.selectedIndex = i;
+        break;
+      }
+    }
+
+    if(effective_datePicker) {
+      if (notice.effective_date) {
+        effective_datePicker.setDate(new Date(notice.effective_date), false);
+        //effective_datePicker.defaultDate = new Date(notice.effective_date);
+      } else {
+        effective_datePicker.setDate(new Date(), false);
+      }
     } else {
-        project.send_update_time = 9;
-        project.send_update_day = 2;     
+      noticeForm.effective_date.value = notice.effective_date;
     }
 
-    
-    if (project.send_updates && project.ghrepo === '') {
-        //throw an error as there must be a title
-        document.getElementById('error_msg').innerHTML = "To send updates the github repository cannot be blank!";
-        document.getElementById('error_div').style.display = "inline";
-        return false;
-    }
-
-
-    // Retrieve contacts from Contacts object.
-    if (typeof contacts !== 'undefined') {
-        var liaisons = contacts.getContacts();
-        if(liaisons.length > 0) {
-            project.contacts = contacts.getContacts();
-        }
-        delete contacts;
-    }
-
-    // Retrieve deliverables from Deliverables object.
-    if (typeof deliverables !== 'undefined') {
-        var assets = deliverables.getDeliverables();
-        if(assets.length > 0) {
-            project.deliverables = deliverables.getDeliverables();
-            project.deliverables.sort(sort_by('due_date', false, function(a){return new Date(a).getTime()}));
-        }
-        delete deliverables;
-    }
-
-    return JSON.parse(JSON.stringify(project));
+    // Retrieve activities from noticeBin object.
+    load_activities_from_notice_bin(notice.activities); 
 }
 
 function convertCheckboxesToInteger(checkboxElements) {
@@ -550,4 +452,60 @@ function formatTime(timeInt) {
    } else {
       return timeInt + ':00';
    }
+}
+
+function create_preview() {
+  var notice = build_notice_object();
+  var html = '<p>Dear Parents/Cargivers';
+  html += '<p>';
+  html += notice.message_open;
+  html += '<p><ul style="list-style-type: none">';
+  var activities = notice.activities.getActivity();
+  for(var idx = 0; idx < activities.length; idx++) {
+    var activity = activities[idx];
+    html += '<li><strong>' + activity.title + '</strong> - ';
+    html += activity.content + '</li>';
+  }
+  html += '</ul><p>';
+  html += notice.message_close;
+  html += '<p>';
+  var firstName = notice.teacher_name.split(" ");
+  html += firstName[0];
+  open_modal(html);
+}
+
+
+// Get the modal
+//var modal = document.getElementById('myModal');
+
+// When the user clicks on the button, open the modal 
+function open_modal(content) {
+    var modal = document.getElementById('myModal');
+    modal.firstChild.innerHTML += content;
+    modal.style.display = "block";
+}
+
+// When the user clicks on <span> (x), close the modal
+function close_modal() {
+    var modal = document.getElementById('myModal');
+    modal.style.display = "none";
+    clear_modal_content();
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+    var modal = document.getElementById('myModal');
+    if (event.target == modal) {
+        //modal.style.display = "none";
+        close_modal();
+    }
+}
+
+function clear_modal_content() {
+    var modal = document.getElementById('myModal');
+    var content_node = modal.firstChild;
+    var content = content_node.firstChild;
+    while (content.nextSibling) {
+      content_node.removeChild(content.nextSibling);
+    }
 }

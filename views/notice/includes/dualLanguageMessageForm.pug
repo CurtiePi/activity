@@ -1,0 +1,11 @@
+
+if notice
+  script.
+    //load_message("#{notice.id}","#{notice.message_en}","#{notice.message_zh}", true);
+
+.form-group
+  label(for='message_en') English Message Content:
+  textarea#message_en.form-control(rows=5, cols=180, placeholder='English message' name='message_en')
+.form-group
+  label(for='message_zh') Chinese Message Content:
+  textarea#message_zh.form-control(rows=5, cols=180, placeholder='中文留言' name='message_zh')

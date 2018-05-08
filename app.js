@@ -28,6 +28,8 @@ db.once('open', function() {
 //Get the route information
 var activityRoute = require('./routes/activityRouter');
 var userRoute = require('./routes/userRouter');
+var titleRoute = require('./routes/titleRouter');
+var noticeRoute = require('./routes/noticeRouter');
 
 var app = express();
 
@@ -50,6 +52,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', activityRoute);
 app.use('/user', userRoute);
+app.use('/title', titleRoute);
+app.use('/notice', noticeRoute);
 
 //Catch 404 and forward to error handler
 app.use(function(req, res, next) {

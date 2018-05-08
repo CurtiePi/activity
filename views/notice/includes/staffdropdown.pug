@@ -1,0 +1,9 @@
+if notice
+  script.
+//    load_teacher_name("#{notice.teacher_name}", true);
+      
+.form-group
+  label(for='teacher') Staff
+    select#teacher.select.form-control(name='teacher_name')
+      each teacher in staff
+        option(value= teacher.name selected= teacher._id == defaultId) #{teacher.name}
