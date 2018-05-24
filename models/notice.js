@@ -1,9 +1,10 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var Activity = require('./activity');
 
-var options = { discriminatorKey: 'kind' };
+var options = { discriminatorKey: 'ntype' };
 
-var NoticeSchema = new Schema{{
+var NoticeSchema = new Schema({
   creation_date: {
     type: Date,
     default: Date.now
@@ -21,4 +22,4 @@ var NoticeSchema = new Schema{{
 
 var Notice = mongoose.model('Notice', NoticeSchema);
 
-module.exports = Notice;
+module.exports =  Notice;

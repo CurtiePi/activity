@@ -4,9 +4,10 @@ function makeAjaxRequest(url, method, data) {
     var httpRequest = new XMLHttpRequest();
 
     if (!httpRequest) {
-      alert('Giving up :( Cannot create an XMLHTTP instance');
+      console.log('Giving up :( Cannot create an XMLHTTP instance');
       return false;
     }
+    console.log(url);
     httpRequest.onreadystatechange = alertContents;
     httpRequest.open(method, url);
     httpRequest.setRequestHeader('Content-Type', 'application/json');
@@ -21,7 +22,8 @@ function makeAjaxRequest(url, method, data) {
         if (httpRequest.status === 200) {
           location.href = httpRequest.responseText;
         } else {
-          alert('There was a problem with the request.');
+          console.log('There was a problem with the request.');
+          console.log('Status: ' + httpRequest.status)
         }
       }
     }

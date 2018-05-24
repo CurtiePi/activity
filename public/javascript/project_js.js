@@ -26,7 +26,7 @@ function store_notice(oldType, newType) {
   } 
 }
 
-function remove_activity_instances() {
+function remove_activity_instance() {
   delete acitivityIns;
 }
 
@@ -104,16 +104,9 @@ function load_activities_from_notice_bin(activities) {
       var activityTitle = activity.title;
 
       if (typeof activityIns === 'undefined') {
-        //activityIns = new Activity();
         activityIns = activities;
       }
-
-      //var identifier = activityIns.addActivity(activityTitle, content, identifier);
-
     }
-    //build_activity_card(activityTitle, content, identifier);
-
-
 }
 
 function remove_activity(event) {
@@ -207,7 +200,7 @@ function update_activity(identifiers) {
 
 function save_notice() {
     var href = "/notice/create";
-    var notice = build_notice_JSON();
+    var notice = get_notice_JSON();
 
     if(notice) {
         // Post data to server.
@@ -217,7 +210,7 @@ function save_notice() {
 
 function update_notice(noticeId) {
     var href = "/notice/" + noticeId;
-    var notice = build_notice_JSON();
+    var notice = get_notice_JSON();
 
     if(notice) {
         // Post data to server.
@@ -232,7 +225,8 @@ function get_notice_object() {
 }
 
 function get_notice_JSON() {
-  var retval = JSON.parse(JSON.stringify(build_notice_object(true)));
+  //var retval = JSON.stringify(build_notice_object(true)));
+  var retval = build_notice_object(true);
   remove_activity_instance();
   return retval;
 }
@@ -242,7 +236,7 @@ function build_notice_object(forOutput = false) {
     var notice = {};
     var noticeForm = document.noticeForm;
     
-    // Retreive general notice  data from notice Form.
+    // Retreive message information from notice Form.
     if (noticeForm.message_open && noticeForm.message_close) {
       notice.message_open = noticeForm.message_open.value;
       notice.message_close = noticeForm.message_close.value;
@@ -251,11 +245,18 @@ function build_notice_object(forOutput = false) {
       notice.message_zh = noticeForm.message_zh.value;
     }
 
+    // Retreive teacher information from notice Form.
     var selIdx = noticeForm.teacher.selectedIndex;
     notice.teacher_name = noticeForm.teacher[selIdx].value;
 
+    // Retreive effective date information from notice Form.
     notice.effective_date = formatDateToISO(noticeForm.effective_date.value);
 
+
+    // Retreive closing information from notice Form.
+    if (noticeForm.closing) {
+      notice.closing = noticeForm.closing.value;
+    }
 
     // Retrieve activties from object.
     if (typeof activityIns !== 'undefined') {
@@ -268,14 +269,16 @@ function build_notice_object(forOutput = false) {
       notice.activities = [];
     }
 
+    var currType = document.getElementById('current_type').value;
+    notice.ntype = (currType == 'WEN') ? 'WeeklyEnglish' : (currType == 'WZH') ? 'WeeklyChinese' : 'General';
     return notice;
 }
 
 function notice_populate_form(notice) {
-    // Build the notice data object to post to server
+    // Populate the notice form from the notice data object
     var noticeForm = document.noticeForm;
     
-    // Retreive general notice  data from notice Form.
+    // Populate the notice form with message data from notice object.
     if (notice.message_open && notice.message_close) {
       noticeForm.message_open.value = notice.message_open;
       noticeForm.message_close.value = notice.message_close;
@@ -284,6 +287,12 @@ function notice_populate_form(notice) {
       noticeForm.message_zh.value = notice.message_zh;
     } 
 
+    // Populate the notice form with closing data from notice object.
+    if (notice.closing) {
+      noticeForm.closing.value = notice.closing;
+    }
+
+    // Populate the notice form with teacher data from notice object.
     var elem = noticeForm.teacher
     for (var i = 0; i < elem.options.length; i++) {
       if (elem.options[i] == notice.teacher_name) {
@@ -292,10 +301,10 @@ function notice_populate_form(notice) {
       }
     }
 
+    // Populate the notice form with effective date data from notice object.
     if(effective_datePicker) {
       if (notice.effective_date) {
         effective_datePicker.setDate(new Date(notice.effective_date), false);
-        //effective_datePicker.defaultDate = new Date(notice.effective_date);
       } else {
         effective_datePicker.setDate(new Date(), false);
       }
@@ -456,24 +465,109 @@ function formatTime(timeInt) {
 
 function create_preview() {
   var notice = build_notice_object();
-  var html = '<p>Dear Parents/Cargivers';
-  html += '<p>';
-  html += notice.message_open;
-  html += '<p><ul style="list-style-type: none">';
-  var activities = notice.activities.getActivity();
-  for(var idx = 0; idx < activities.length; idx++) {
-    var activity = activities[idx];
-    html += '<li><strong>' + activity.title + '</strong> - ';
-    html += activity.content + '</li>';
+  var currType = notice.ntype;
+  var html = '';
+
+  switch (currType) {
+    case 'General':
+        html = create_general_preview(notice);
+        break;
+    case 'WeeklyEnglish':
+        html = create_english_preview(notice);
+        break;
+    case 'WeeklyChinese':
+        html = create_chinese_preview(notice);
+        break;
   }
-  html += '</ul><p>';
-  html += notice.message_close;
-  html += '<p>';
-  var firstName = notice.teacher_name.split(" ");
-  html += firstName[0];
-  open_modal(html);
+
+  if (html) {
+    console.log(html.length);
+    open_modal(html);
+  }
 }
 
+function create_chinese_preview(notice) {
+    var content = '';
+    content += notice.effective_date + '<br/>';
+    content += '<p>';
+    content += create_activities_content(notice.activities.getActivity());
+
+    content += '<p>你好<br/>';
+    content += notice.message_zh;
+    content += '<p>';
+    content += notice.message_en;
+    content += '<p>';
+    content += notice.closing;
+    content += '<p>';
+    content += get_teacher_name(notice.teacher_name);
+
+    return content;
+}
+
+function create_english_preview(notice) {
+    var content = '';
+    content += notice.effective_date + '<br/>';
+    content += '<p>Dear Parents/Caregivers';
+    content += '<p>';
+    content += notice.message_open;
+    content += '<p>';
+    content += create_activities_content(notice.activities.getActivity());
+    content += '<p>';
+    content += notice.message_close;
+    content += '<p>';
+    content += notice.closing;
+    content += '<p>';
+    content += get_teacher_name(notice.teacher_name);
+
+    return content;
+
+}
+
+function create_general_peview(notice) {
+    var content = '';
+    content += '<p>Dear Parents/Caregivers';
+    content += '<p>';
+    content += notice.message_en;
+    content += '<p>';
+    content += notice.message_zh;
+    content += '<p>';
+    content += get_teacher_name(notice.teacher_name);
+
+}
+
+function create_activities_content(activities) {
+  
+  var content = '';
+
+  for(var idx = 0; idx < activities.length; idx++) {
+    var activity = activities[idx];
+    content += '<li><strong>' + activity.title + '</strong> - ';
+    content += activity.content + '</li>';
+  }
+  
+  if (content.length > 0 ) {
+    content = '<ul style="list-style-type: none">' + content;
+    content += '</ul>';
+  }
+
+  return content;
+}
+
+function get_teacher_name(name) {
+    var resultName = '';
+
+    if (name == 'Management') {
+        resultName = 'The Activity Box<br/>The Management';    
+    } else {
+        var firstName = name.split(" ");
+        resultName = firstName[0];
+    }
+
+   return resultName; 
+}
+
+// Get the modal
+//var modal = document.getElementById('myModal');
 
 // Get the modal
 //var modal = document.getElementById('myModal');

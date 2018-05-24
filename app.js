@@ -1,5 +1,6 @@
 var express = require('express');
 var path = require('path');
+var fs = require('fs');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
@@ -12,9 +13,12 @@ var mw = require('./lib/middlewares');
 require('dotenv').config();
 
 var config = require('./config');
+var accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), {flags: 'a'});
 
+mongoose.set('debug', true);
 
 // Get a database connection here
+console.log(config.mongoUrl);
 mongoose.connect(config.mongoUrl);
 
 var db = mongoose.connection;
@@ -39,7 +43,7 @@ app.set('view engine', 'pug');
 
 // Uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(logger('dev'));
+app.use(logger('combined', {stream: accessLogStream}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(expressValidator());
@@ -66,6 +70,7 @@ app.locals.isLoggedIn = false;
 
 //Development error handler - will print stacktrace
 if (app.get('env') === 'development') {
+    console.log('Development Environment');
     app.use(function (err, req, res, next) {
         res.status(err.status || 500);
         res.render('error', {

@@ -1,8 +1,8 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var possibleRoles = ['ADMIN', 'STAFF', 'USER'];
-var defaultRole = 'USER';
+var possibleRoles = ['ADMIN', 'STAFF', 'TEACHER', 'USER'];
+var defaultRole = 'STAFF';
 
 var RoleSchema = new Schema ({
   title: {

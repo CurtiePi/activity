@@ -1,5 +1,8 @@
 .row
-  div.col-md-7(id='message')
-    include singleLanguageMessageForm.pug
+  div.col-md-7
+    div(id='message')
+      include singleLanguageMessageForm.pug
+    div(id='closing')
+      include closingForm.pug
   div.col-md-5(id='acitvity')
     include en_activityForm.pug

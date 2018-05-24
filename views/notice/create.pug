@@ -24,13 +24,14 @@ block content
                 input.inpyt-sm(type='text', placeholder='week starting', name='effective_date', id='datepicker_effective')
             div.col-md-2(id='staff')
               include includes/staffdropdown.pug
+            button.btn.btn-primary(type='button', onclick='save_notice()') Save Notice
           .row
             div.col-md-10(id='form_body')
               include includes/weeklyENForm.pug
 
 
-  div.hidden(id='HOL')
-    include includes/holidayForm.pug
+  div.hidden(id='GEN')
+    include includes/generalForm.pug
   div.hidden(id='WZH')
     include includes/weeklyZHForm.pug
   div.hidden(id='WEN')

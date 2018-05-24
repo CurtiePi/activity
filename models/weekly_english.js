@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-
-var options = { discriminatorKey: 'kind' };
+var Activity = require('./activity');
+var Notice = require('./notice.js');
 
 var WeeklyEnNoticeSchema = new Schema({
   salutation: {
@@ -12,7 +12,7 @@ var WeeklyEnNoticeSchema = new Schema({
     type: String,
     required: true
   },
-  activites: [ActivitySchema],
+  activites: [Activity.schema],
   message_close: {
     type: String,
     required: false
@@ -23,10 +23,10 @@ var WeeklyEnNoticeSchema = new Schema({
   },
   teacher_name: {
     type: String,
-    required: false
+    required: true
   }
-}, options);
+});
 
-var WeeklyEnNotice = Notice.discriminator('WeeklyEnNotice', WeeklyEnNoticeSchema);
+var WeeklyEnglish = Notice.discriminator('WeeklyEnglish', WeeklyEnNoticeSchema);
 
-module.exports = WeeklyEnNotice;
+module.exports = mongoose.model('WeeklyEnglish');

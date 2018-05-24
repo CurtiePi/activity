@@ -1,5 +1,8 @@
 .row
-  div.col-md-7(id='message')
-    include dualLanguageMessageForm.pug
+  div.col-md-7
+    div(id='message')
+      include dualLanguageMessageForm.pug
+    div(id='closing')
+      include closingForm.pug
   div.col-md-5(id='acitvity')
     include zh_activityForm.pug

@@ -6,23 +6,23 @@ block content
 
   div.container.col-sm-7
     h1
-      a(href='/') Messages 
-    if msg
-      p= msg
+      a(href='/') Notices 
+    if message
+      p= message
     table.table
-      each message in messages
+      each notice in notices 
         tr
           td
-            a(href='#' + user.id) #{message.subject}}
+            a(href='/user/profile/' + notice.id) #{notice.effective_date}
           td
-            a(href='#' + user.id) #{message.text}
+            a(href='#' + notice.id) #{notice.teacher_name}
           td
-            a(href='#' + user.id) #{message.date}
+            a(href='#' + notice.id) #{notice.creation_date}
           td
-            a(href='#' + user.id) Edit
+            a(href='#' + notice.id) Edit
           if isAdmin
             td
-              a(href='#' + user.id) Remove
+              a(href='#' + notice.id) Remove
 
     p
-     a.btn.btn-primary(href='#') Add New Message
+     a.btn.btn-primary(href='/notice/create') Create Notice

@@ -1,15 +1,15 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var Activity = require('./activity');
+var Notice = require('./notice.js');
 
-var options = { discriminatorKey: 'kind' };
-
-var HolidayNoticeSchema = new Schema({
+var GeneralNoticeSchema = new Schema({
   salutation: {
     type: String,
     default: 'Dear Parents/Caregivers,'
   },
   message_en: {
-    type: text,
+    type: String,
     required: true
   },
   message_zh: {
@@ -20,8 +20,8 @@ var HolidayNoticeSchema = new Schema({
     type: String,
     required: true
   }
-}, options);
+});
 
-var HolidayNotice = Notice.discriminator('HolidayNotice', HolidayNoticeSchema);
+var General = Notice.discriminator('General', GeneralNoticeSchema);
 
-module.exports = HolidayNotice;
+module.export = mongoose.model('General');
